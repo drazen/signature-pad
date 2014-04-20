@@ -73,7 +73,7 @@ function SignaturePad (selector, options) {
    *
    * @type {Object}
    */
-  , previous = {'x': null, 'y': null}
+  , previous = {'x': null, 'y': null, 't': null}
 
   /**
    * An array holding all the points and lines to generate the signature
@@ -81,8 +81,10 @@ function SignaturePad (selector, options) {
    * {
    *   mx: moveTo x coordinate
    *   my: moveTo y coordinate
+   *   mt: moveTo time coordinate
    *   lx: lineTo x coordinate
-   *   lx: lineTo y coordinate
+   *   ly: lineTo y coordinate
+   *   lt: lineTo time coordinate
    * }
    *
    * @private
@@ -180,7 +182,7 @@ function SignaturePad (selector, options) {
    * @param {Number} newYOffset A pixel value for drawing the newY, used for drawing a single dot on click
    */
   function drawLine (e, newYOffset) {
-    var offset, newX, newY
+    var offset, newX, newY, newT
 
     e.preventDefault()
 
@@ -189,6 +191,7 @@ function SignaturePad (selector, options) {
     clearTimeout(mouseLeaveTimeout)
     mouseLeaveTimeout = false
 
+    newT = e.timeStamp
     if (typeof e.targetTouches !== 'undefined') {
       newX = Math.floor(e.targetTouches[0].pageX - offset.left)
       newY = Math.floor(e.targetTouches[0].pageY - offset.top)
@@ -206,6 +209,9 @@ function SignaturePad (selector, options) {
     if (previous.y === null)
       previous.y = newY
 
+    if (previous.t === null)
+      previous.t = newT
+
     if (newYOffset)
       newY += newYOffset
 
@@ -219,12 +225,15 @@ function SignaturePad (selector, options) {
     output.push({
       'lx' : newX
       , 'ly' : newY
+      , 'lt' : newT
       , 'mx' : previous.x
       , 'my' : previous.y
+      , 'mt' : previous.t
     })
 
     previous.x = newX
     previous.y = newY
+    previous.t = newT
 
     if (settings.onDraw && typeof settings.onDraw === 'function')
       settings.onDraw.apply(self)
@@ -267,6 +276,7 @@ function SignaturePad (selector, options) {
 
     previous.x = null
     previous.y = null
+    previous.t = null
 
     if (settings.output && output.length > 0)
       $(settings.output, context).val(JSON.stringify(output))
